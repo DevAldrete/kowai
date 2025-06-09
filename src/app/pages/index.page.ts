@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
-
-import { AnalogWelcome } from './analog-welcome';
+import { KowaiWelcomeComponent } from './kowai-welcome';
+import { NavbarComponent } from '../components/navbar/navbar.component'; // Import NavbarComponent
 
 @Component({
   selector: 'app-home',
-  imports: [AnalogWelcome],
+  standalone: true,
+  imports: [NavbarComponent, KowaiWelcomeComponent], // Add NavbarComponent to imports
   template: `
-     <app-analog-welcome/>
+     <app-navbar></app-navbar> <!-- Add navbar selector -->
+     <app-kowai-welcome/>
   `,
 })
 export default class HomeComponent {
