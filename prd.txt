@@ -1,0 +1,65 @@
+<context>
+# Overview
+KowAI is a self-hostable, open-source AI chat platform designed for power-users, developers, and the privacy-conscious. It solves the problem of entrusting sensitive data and conversations to third-party AI service providers by allowing users to run the entire platform on their own infrastructure. Users connect their own API keys, ensuring all interactions are private and secure. The core value is providing ultimate control, security, and flexibility in a high-performance package.
+
+# Core Features
+- **Truly Self-Hosted & Private:** The entire stack (Go backend, Angular frontend, Nginx) is containerized with Docker for easy deployment on any personal or cloud server. All data, from conversations to API keys, remains under the user's control.
+- **Go Backend:** The application logic will be powered by a high-performance backend written in Go, designed for excellent concurrency to handle real-time WebSocket communication efficiently.
+- **Multi-Model & Provider-Agnostic:** The system will be architected to support multiple LLM providers seamlessly. Initial support will include OpenAI, Anthropic, Google (Gemini), Groq, and local models via Ollama. Users can switch between models on the fly.
+- **Deep AI Personalization (Personas):** Users can create, save, and reuse "Personas." A Persona is a combination of a custom system prompt and specific model parameters (e.g., `temperature`, `top_p`), allowing users to craft specialized AI agents for different tasks.
+- **Real-time Streaming:** The user interface will provide a fluid, real-time chat experience by streaming responses from the backend via WebSockets.
+- **Markdown & Code Rendering:** The frontend will correctly render Markdown and provide syntax highlighting for code blocks, making it an ideal tool for developers.
+
+# User Experience
+- **User Personas:**
+    - **The Privacy-Focused Developer:** Wants to leverage powerful AI models for coding and research without sending proprietary code or sensitive data to external services.
+    - **The AI Power-User:** Wants to experiment with different models, fine-tune parameters, and build a library of custom AI agents (Personas) for various professional and creative tasks.
+- **Key User Flows:**
+    1. **Setup:** The user clones the repository, populates a `.env` file with their database connection string and LLM API keys, and runs `docker-compose up -d`.
+    2. **Core Chat:** The user opens the web interface, selects a default model, and begins a conversation. Responses are streamed in real-time.
+    3. **Persona Creation:** The user navigates to a "Personas" management page to create a new Persona, defining its name, system prompt, and preferred model parameters.
+    4. **Chatting with a Persona:** The user starts a new chat and selects their custom Persona, tailoring the AI's behavior for a specific goal.
+- **UI/UX Considerations:** A clean, minimalist UI is essential. The interface must clearly display the active model and Persona for any given chat. A persistent chat history, easily accessible from a sidebar, is a core requirement.
+</context>
+<PRD>
+# Technical Architecture
+- **Development Strategy:** All development must follow a strict **Test-Driven Development (TDD)** methodology. Unit and integration tests must be written before the features they cover.
+- **System Components & Architecture:** The backend will be built using **Go** and follow a **Hexagonal (Ports & Adapters) Architecture**.
+    - **Core (Hexagon):** Contains the pure, dependency-free business logic of the application (managing conversations, personas, etc.) and defines the `Ports` (Go interfaces). This core will be fully unit-tested.
+    - **Driving Adapters:** These will include the REST API and WebSocket controllers that translate incoming HTTP/WebSocket requests into calls on the Core's ports.
+    - **Driven Adapters:** These will be the concrete implementations of the Core's ports for interacting with external systems. This includes a PostgreSQL adapter for database persistence and separate adapters for each LLM provider (OpenAI, Anthropic, etc.).
+- **Data Models (PostgreSQL):**
+    - `personas`: Stores persona configurations (name, system_prompt, parameters).
+    - `conversations`: Stores conversation metadata (title, associated persona_id).
+    - `messages`: Stores individual chat messages (role, content, model_used, conversation_id).
+- **Infrastructure:**
+    - **Database:** Neon (Serverless PostgreSQL).
+    - **Deployment:** Docker & Docker Compose for containerizing and running the Go backend, Angular frontend, and Nginx reverse proxy.
+
+# Development Roadmap
+- **Phase 1: MVP - Core Go Backend & Chat Functionality (TDD)**
+    - **Backend:** Set up the Go Hexagonal architecture. Write tests for, then implement, the core business logic. Implement the database port and a PostgreSQL adapter for message/conversation persistence. Implement the LLM provider port and a single adapter for one provider (e.g., OpenAI). Implement the WebSocket driving adapter for the main chat functionality.
+    - **Frontend:** Refactor the Angular application to communicate exclusively with the new Go backend's WebSocket and REST endpoints.
+    - **Deployment:** Create a `docker-compose.yml` to orchestrate all services.
+- **Phase 2: Multi-Model Support & Personas**
+    - **Backend:** Write tests for, then implement, CRUD functionality for Personas. Integrate Personas into the chat logic. Write tests for, then implement, driven adapters for additional LLM providers (Anthropic, Groq, Ollama).
+    - **Frontend:** Build the UI for managing Personas and selecting the active model/Persona for a chat.
+- **Phase 3: Advanced Features**
+    - **Backend:** Write tests for, then implement, conversation history management (listing, searching, deleting).
+    - **Frontend:** Develop the UI for browsing and managing past conversations.
+
+# Logical Dependency Chain
+1. **Setup Go Hexagonal Core:** Establish the project structure, define core interfaces (ports), and set up the TDD framework.
+2. **Persistence Layer:** Implement and test the database adapter. State is required before any meaningful interaction.
+3. **First LLM Provider:** Implement and test the first LLM adapter to enable a functional end-to-end chat flow.
+4. **WebSocket API:** Implement and test the primary driving adapter for real-time communication.
+5. **Frontend-Backend Integration:** Connect the Angular UI to the Go backend, achieving a visible and usable MVP.
+6. **Persona Feature:** Build the Persona functionality (backend first, then frontend), as it extends the core chat feature.
+7. **Expand LLM Support:** Add more LLM provider adapters, enhancing the platform's flexibility.
+
+# Risks and Mitigations
+- **Risk: Backend Rewrite Complexity.** Replacing the existing TypeScript backend with a new Go application is a significant undertaking.
+    - **Mitigation:** Strict adherence to TDD will ensure each component is verified before integration. The Hexagonal Architecture will enforce separation of concerns, allowing components to be built and tested in isolation.
+- **Risk: Ensuring TDD Discipline.** The team may be tempted to cut corners on tests to speed up development.
+    - **Mitigation:** Enforce TDD through code reviews and CI checks that fail builds with insufficient test coverage. The initial project setup must include a robust testing framework.
+</PRD> 
