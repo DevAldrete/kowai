@@ -1,0 +1,86 @@
+[project]
+name = "kowai-project"
+version = "0.1.0"
+description = "KowAI Backend - AI-powered backend service with persona architecture"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.116.0",
+  "uvicorn[standard]>=0.32.0",
+  "pydantic>=2.11.7",
+  "pydantic-settings>=2.0.0",
+  "sqlalchemy>=2.0.41",
+  "aiomysql>=0.2.0",
+  "mariadb>=1.1.12",
+  "appwrite>=11.0.0",
+  "dspy>=2.6.27",
+  "prefect>=3.4.7",
+  "stripe>=12.3.0",
+  "psutil>=7.0.0",
+  "redis>=6.2.0",
+  "haystack-ai>=2.15.2",
+  "trafilatura>=2.0.0",
+  "alembic>=1.16.2",
+]
+
+[project.optional-dependencies]
+dev = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "F",
+  "W",
+  "C90",
+  "I",
+  "N",
+  "UP",
+  "B",
+  "S",
+  "A",
+  "COM",
+  "DTZ",
+  "EM",
+  "G",
+  "PIE",
+  "T20",
+  "SIM",
+  "ARG",
+  "ERA",
+  "PD",
+  "PGH",
+  "PL",
+  "TRY",
+  "RUF",
+]
+ignore = ["S101", "S104", "PLR0913", "TRY003"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[dependency-groups]
+dev = [
+  "bandit>=1.8.6",
+  "httpx>=0.28.1",
+  "mypy>=1.16.1",
+  "pytest>=8.4.1",
+  "pytest-asyncio>=1.0.0",
+  "ruff>=0.12.2",
+]

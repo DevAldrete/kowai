@@ -1,0 +1,42 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kowai
+
+resources:
+- ../base
+
+images:
+- name: kowai/backend
+  newTag: latest
+
+replicas:
+- name: kowai-backend
+  count: 5
+- name: prefect-worker
+  count: 5
+
+patchesStrategicMerge:
+- production-patches.yaml
+
+configMapGenerator:
+- name: kowai-config
+  behavior: merge
+  literals:
+  - DEBUG=false
+  - LOG_LEVEL=WARNING
+  - COMPRESSION_LEVEL=9
+
+secretGenerator:
+- name: kowai-secrets
+  behavior: replace
+  files:
+  - DATABASE_URL=secrets/database-url
+  - SECRET_KEY=secrets/secret-key
+  - OPENAI_API_KEY=secrets/openai-api-key
+  - ANTHROPIC_API_KEY=secrets/anthropic-api-key
+  - APPWRITE_ENDPOINT=secrets/appwrite-endpoint
+  - APPWRITE_PROJECT_ID=secrets/appwrite-project-id
+  - APPWRITE_API_KEY=secrets/appwrite-api-key
+  - MYSQL_ROOT_PASSWORD=secrets/mysql-root-password
+  - MYSQL_PASSWORD=secrets/mysql-password

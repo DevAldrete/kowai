@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kowai-backend
+  namespace: kowai
+  labels:
+    app.kubernetes.io/name: kowai-backend
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: kowai
+  name: kowai-backend-role
+  labels:
+    app.kubernetes.io/name: kowai-backend
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kowai-backend-rolebinding
+  namespace: kowai
+  labels:
+    app.kubernetes.io/name: kowai-backend
+subjects:
+- kind: ServiceAccount
+  name: kowai-backend
+  namespace: kowai
+roleRef:
+  kind: Role
+  name: kowai-backend-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kowai-backend-pdb
+  namespace: kowai
+  labels:
+    app.kubernetes.io/name: kowai-backend
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kowai-backend
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kowai-backend-netpol
+  namespace: kowai
+  labels:
+    app.kubernetes.io/name: kowai-backend
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: kowai-backend
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: mariadb
+    ports:
+    - protocol: TCP
+      port: 3306
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: prefect
+    ports:
+    - protocol: TCP
+      port: 4200
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80

@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: kowai-backend-metrics
+  namespace: kowai
+  labels:
+    app.kubernetes.io/name: kowai-backend
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kowai-backend
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kowai-backend-alerts
+  namespace: kowai
+  labels:
+    app.kubernetes.io/name: kowai-backend
+    app.kubernetes.io/component: monitoring
+spec:
+  groups:
+  - name: kowai-backend.rules
+    rules:
+    - alert: KowaiBackendDown
+      expr: up{job="kowai-backend-service"} == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "KowAI Backend is down"
+        description: "KowAI Backend has been down for more than 5 minutes."
+    
+    - alert: KowaiBackendHighLatency
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "KowAI Backend high latency"
+        description: "95th percentile latency is above 1 second for 10 minutes."
+    
+    - alert: KowaiBackendHighErrorRate
+      expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "KowAI Backend high error rate"
+        description: "Error rate is above 10% for 5 minutes."
+    
+    - alert: KowaiBackendHighMemoryUsage
+      expr: container_memory_usage_bytes{pod=~"kowai-backend-.*"} / container_spec_memory_limit_bytes > 0.9
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "KowAI Backend high memory usage"
+        description: "Memory usage is above 90% for 10 minutes."
+    
+    - alert: KowaiBackendHighCPUUsage
+      expr: rate(container_cpu_usage_seconds_total{pod=~"kowai-backend-.*"}[5m]) > 0.8
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: "KowAI Backend high CPU usage"
+        description: "CPU usage is above 80% for 15 minutes."

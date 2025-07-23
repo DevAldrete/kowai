@@ -1,0 +1,4 @@
+{
+  // ignore the stub-not-found diagnostic for dspy
+  "python.analysis.ignore": ["dspy"]
+}

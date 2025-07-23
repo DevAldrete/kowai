@@ -1,0 +1,33 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# AI Specific Files
+CLAUDE.md 
+AGENTS.md 
+GEMINI.md 
+.mcp.json
+.claude/
+TODO.md
+
+# Secrets 
+.env*
+./backend/.env*
+./frontend/.env*
+./backend/secrets/
+
+# Backend Specifics
+./backend/init-db.sql
+./backend/docker-compose.yml
+./backend/Dockerfile
+./backend/uv.lock
+
+# Frontend specifics
+./frontend/*

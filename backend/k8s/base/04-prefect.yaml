@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefect-server
+  namespace: kowai
+  labels:
+    app.kubernetes.io/name: prefect
+    app.kubernetes.io/component: server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prefect
+      app.kubernetes.io/component: server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: prefect
+        app.kubernetes.io/component: server
+    spec:
+      containers:
+      - name: prefect-server
+        image: prefecthq/prefect:2-python3.12
+        command:
+        - prefect
+        - server
+        - start
+        - --host
+        - "0.0.0.0"
+        ports:
+        - containerPort: 4200
+          name: api
+        env:
+        - name: PREFECT_API_URL
+          value: "http://0.0.0.0:4200/api"
+        - name: PREFECT_SERVER_API_HOST
+          value: "0.0.0.0"
+        - name: PREFECT_UI_URL
+          value: "http://prefect.kowai.local:4200"
+        volumeMounts:
+        - name: prefect-data
+          mountPath: /root/.prefect
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 4200
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 4200
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: prefect-data
+        persistentVolumeClaim:
+          claimName: prefect-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prefect-worker
+  namespace: kowai
+  labels:
+    app.kubernetes.io/name: prefect
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prefect
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: prefect
+        app.kubernetes.io/component: worker
+    spec:
+      containers:
+      - name: prefect-worker
+        image: prefecthq/prefect:2-python3.12
+        command:
+        - prefect
+        - worker
+        - start
+        - --pool
+        - default-agent-pool
+        env:
+        - name: PREFECT_API_URL
+          value: "http://prefect-server:4200/api"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prefect-server
+  namespace: kowai
+  labels:
+    app.kubernetes.io/name: prefect
+    app.kubernetes.io/component: server
+spec:
+  selector:
+    app.kubernetes.io/name: prefect
+    app.kubernetes.io/component: server
+  ports:
+  - port: 4200
+    targetPort: 4200
+    name: api
+  type: ClusterIP

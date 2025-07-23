@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kowai
+  labels:
+    name: kowai
+    app.kubernetes.io/name: kowai
+    app.kubernetes.io/instance: production
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kowai-config
+  namespace: kowai
+  labels:
+    app.kubernetes.io/name: kowai
+    app.kubernetes.io/component: config
+data:
+  DEBUG: "false"
+  LOG_LEVEL: "INFO"
+  COMPRESSION_ENABLED: "true"
+  COMPRESSION_LEVEL: "7"
+  PREFECT_API_URL: "http://prefect-server:4200/api"
+  REDIS_URL: "redis://redis-service:6379"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kowai-secrets
+  namespace: kowai
+  labels:
+    app.kubernetes.io/name: kowai
+    app.kubernetes.io/component: secrets
+type: Opaque
+stringData:
+  DATABASE_URL: "mysql+aiomysql://kowai_user:CHANGE_ME@mariadb-service:3306/kowai"
+  SECRET_KEY: "CHANGE_ME_IN_PRODUCTION"
+  OPENAI_API_KEY: "CHANGE_ME"
+  ANTHROPIC_API_KEY: "CHANGE_ME"
+  APPWRITE_ENDPOINT: "https://cloud.appwrite.io/v1"
+  APPWRITE_PROJECT_ID: "CHANGE_ME"
+  APPWRITE_API_KEY: "CHANGE_ME"
+  MYSQL_ROOT_PASSWORD: "CHANGE_ME"
+  MYSQL_PASSWORD: "CHANGE_ME"

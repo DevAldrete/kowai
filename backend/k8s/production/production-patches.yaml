@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kowai-backend
+spec:
+  template:
+    spec:
+      containers:
+      - name: kowai-backend
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: monitoring-secrets
+              key: sentry-dsn
+              optional: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+spec:
+  template:
+    spec:
+      containers:
+      - name: mariadb
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        args:
+        - --max-connections=1000
+        - --innodb-buffer-pool-size=2G
+        - --innodb-log-file-size=512M
+        - --slow-query-log=1
+        - --long-query-time=2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  template:
+    spec:
+      containers:
+      - name: redis
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        command:
+        - redis-server
+        - --appendonly
+        - "yes"
+        - --appendfsync
+        - "everysec"
+        - --maxmemory
+        - "1.5gb"
+        - --maxmemory-policy
+        - "allkeys-lru"
+        - --save
+        - "900 1"
+        - --save
+        - "300 10"
+        - --save
+        - "60 10000"
